@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>BootNav</title>
+<link rel="icon" type="image/png" href="logo.png">
+<meta name="theme-color" content="#0a1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BootNav">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="apple-touch-icon" sizes="180x180" href="logo.png">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+/* ======================================================================
+   BOOTNAV — BASIS-MODUL
+   Design: 4 Themes (Dark, Light, Neon, Outdoor), Touch-first
+   ====================================================================== */
+
+:root{
+  --bn-deep-950:#050c14;
+  --bn-deep-900:#0a1420;
+  --bn-deep-800:#0f1e2e;
+  --bn-deep-700:#16293d;
+  --bn-deep-600:#1e3550;
+  --bn-line:rgba(148,180,209,0.14);
+  --bn-line-strong:rgba(148,180,209,0.28);
+
+  --bn-fg:#e7f0f7;
+  --bn-fg-dim:#9fb4c7;
+  --bn-fg-faint:#6a8399;
+
+  --bn-accent:#20c9a8;
+  --bn-accent-2:#ffb648;
+  --bn-danger:#ff5d5d;
+  --bn-info:#4fb3ff;
+
+  --bn-glass-bg:rgba(15,30,46,0.62);
+  --bn-glass-bg-strong:rgba(10,20,32,0.82);
+  --bn-glass-blur:14px;
+
+  --bn-radius-s:8px;
+  --bn-radius-m:14px;
+  --bn-radius-l:20px;
+
+  --bn-header-h:52px;
+  --bn-hud-h:84px;
+
+  --bn-shadow:0 8px 32px rgba(0,0,0,0.45);
+  --bn-shadow-soft:0 2px 10px rgba(0,0,0,0.3);
+
+  --bn-font-display:'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --bn-font-mono:'Courier New', ui-monospace, monospace;
+
+  --bn-safe-top: env(safe-area-inset-top, 0px);
+  --bn-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bn-safe-left: env(safe-area-inset-left, 0px);
+  --bn-safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* ---------- 1. DARK DESIGN ---------- */
+html[data-theme="dark"]{
+  --bn-deep-950:#050c14;
+  --bn-deep-900:#0a1420;
+  --bn-deep-800:#0f1e2e;
+  --bn-deep-700:#16293d;
+  --bn-deep-600:#1e3550;
+  --bn-line:rgba(148,180,209,0.14);
+  --bn-line-strong:rgba(148,180,209,0.28);
+  --bn-fg:#e7f0f7;
+  --bn-fg-dim:#9fb4c7;
+  --bn-fg-faint:#6a8399;
+  --bn-accent:#20c9a8;
+  --bn-accent-2:#ffb648;
+  --bn-danger:#ff5d5d;
+  --bn-info:#4fb3ff;
+  --bn-glass-bg:rgba(15,30,46,0.62);
+  --bn-glass-bg-strong:rgba(10,20,32,0.82);
+  --bn-shadow:0 8px 32px rgba(0,0,0,0.45);
+  --bn-shadow-soft:0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* ---------- 2. LIGHT DESIGN ---------- */
+html[data-theme="light"]{
+  --bn-deep-950:#eef3f7;
+  --bn-deep-900:#f7fafc;
+  --bn-deep-800:#ffffff;
+  --bn-deep-700:#e7eef3;
+  --bn-deep-600:#d7e2ea;
+  --bn-line:rgba(20,50,70,0.12);
+  --bn-line-strong:rgba(20,50,70,0.22);
+  --bn-fg:#0d2233;
+  --bn-fg-dim:#3f5b70;
+  --bn-fg-faint:#7891a2;
+  --bn-accent:#00897b;
+  --bn-accent-2:#d97706;
+  --bn-danger:#dc2626;
+  --bn-info:#0284c7;
+  --bn-glass-bg:rgba(255,255,255,0.75);
+  --bn-glass-bg-strong:rgba(255,255,255,0.92);
+  --bn-shadow:0 8px 28px rgba(20,50,70,0.16);
+  --bn-shadow-soft:0 2px 10px rgba(20,50,70,0.1);
+}
+
+/* ---------- 3. NEON DESIGN (High Contrast Night) ---------- */
+html[data-theme="neon"]{
+  --bn-deep-950:#000000;
+  --bn-deep-900:#0a0a0a;
+  --bn-deep-800:#121212;
+  --bn-deep-700:#1e1e1e;
+  --bn-deep-600:#2a2a2a;
+  --bn-line:rgba(0,255,204,0.3);
+  --bn-line-strong:rgba(0,255,204,0.6);
+  --bn-fg:#ffffff;
+  --bn-fg-dim:#00ffcc;
+  --bn-fg-faint:#80ffe5;
+  --bn-accent:#00ffcc;
+  --bn-accent-2:#ff0055;
+  --bn-danger:#ff0055;
+  --bn-info:#00bfff;
+  --bn-glass-bg:rgba(0,0,0,0.85);
+  --bn-glass-bg-strong:rgba(0,0,0,0.95);
+  --bn-shadow:0 0 15px rgba(0,255,204,0.3);
+  --bn-shadow-soft:0 0 8px rgba(0,255,204,0.2);
+}
+
+/* ---------- 4. OUTDOOR DESIGN (Daylight Amber) ---------- */
+html[data-theme="outdoor"]{
+  --bn-deep-950:#1c1917;
+  --bn-deep-900:#292524;
+  --bn-deep-800:#44403c;
+  --bn-deep-700:#57534e;
+  --bn-deep-600:#78716c;
+  --bn-line:rgba(251,146,60,0.25);
+  --bn-line-strong:rgba(251,146,60,0.45);
+  --bn-fg:#fff7ed;
+  --bn-fg-dim:#fdba74;
+  --bn-fg-faint:#fed7aa;
+  --bn-accent:#f97316;
+  --bn-accent-2:#eab308;
+  --bn-danger:#ef4444;
+  --bn-info:#38bdf8;
+  --bn-glass-bg:rgba(41,37,36,0.85);
+  --bn-glass-bg-strong:rgba(28,25,23,0.95);
+  --bn-shadow:0 8px 32px rgba(0,0,0,0.6);
+  --bn-shadow-soft:0 2px 10px rgba(0,0,0,0.4);
+}
+
+*{box-sizing:border-box;}
+html,body{
+  margin:0; padding:0; width:100%; height:100%;
+  overflow:hidden; overscroll-behavior:none;
+  background:var(--bn-deep-950);
+  color:var(--bn-fg);
+  font-family:var(--bn-font-display);
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+button{font-family:inherit;}
+::selection{background:var(--bn-accent); color:#04211c;}
+
+#bn-app{
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  background:var(--bn-deep-950);
+}
+
+/* ---------- Header ---------- */
+#bn-header{
+  height:calc(var(--bn-header-h) + var(--bn-safe-top));
+  padding-top:var(--bn-safe-top);
+  padding-left:calc(10px + var(--bn-safe-left));
+  padding-right:calc(10px + var(--bn-safe-right));
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--bn-glass-bg-strong);
+  backdrop-filter:blur(var(--bn-glass-blur)) saturate(140%);
+  -webkit-backdrop-filter:blur(var(--bn-glass-blur)) saturate(140%);
+  border-bottom:1px solid var(--bn-line);
+  z-index:500; flex-shrink:0;
+  box-shadow:var(--bn-shadow-soft);
+}
+.bn-header-side{display:flex; align-items:center; gap:8px; min-width:0;}
+.bn-icon-btn{
+  width:38px; height:38px; border-radius:var(--bn-radius-s);
+  border:1px solid var(--bn-line); background:rgba(255,255,255,0.04);
+  color:var(--bn-fg); font-size:18px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:background .15s ease, transform .1s ease, border-color .15s ease;
+  flex-shrink:0; -webkit-user-select:none; user-select:none;
+}
+.bn-icon-btn:active{transform:scale(0.92); background:rgba(255,255,255,0.1);}
+.bn-icon-btn.bn-accent-active{
+  border-color:var(--bn-accent); color:var(--bn-accent);
+  box-shadow:0 0 0 1px var(--bn-accent) inset, 0 0 12px rgba(32,201,168,0.35);
+}
+#bn-brand{
+  display:flex; align-items:center; gap:8px; font-weight:700;
+  font-size:16px; letter-spacing:0.3px; white-space:nowrap; overflow:hidden;
+}
+#bn-brand .bn-logo-mark{font-size:19px; filter:drop-shadow(0 0 6px rgba(32,201,168,.5));}
+#bn-brand img.bn-logo-mark, .bn-sidebar-head img.bn-logo-mark{
+  height:22px; width:auto; display:block; filter:drop-shadow(0 0 6px rgba(32,201,168,.35));
+}
+#bn-brand .bn-brand-sub{
+  font-size:9.5px; font-weight:600; color:var(--bn-fg-faint);
+  letter-spacing:1.5px; text-transform:uppercase; display:block; margin-top:-2px;
+}
+#bn-brand-text{display:flex; flex-direction:column; line-height:1.1;}
+
+.bn-gps-pill{
+  display:flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:999px;
+  border:1px solid var(--bn-line); background:rgba(255,255,255,0.04);
+  font-size:11px; font-weight:600; color:var(--bn-fg-dim);
+  white-space:nowrap;
+}
+.bn-gps-dot{
+  width:8px; height:8px; border-radius:50%; background:var(--bn-fg-faint);
+  flex-shrink:0; transition:background .3s ease, box-shadow .3s ease;
+}
+.bn-gps-dot.bn-live{background:var(--bn-accent); box-shadow:0 0 8px var(--bn-accent); animation:bn-pulse 1.8s ease-in-out infinite;}
+.bn-gps-dot.bn-searching{background:var(--bn-accent-2); box-shadow:0 0 8px var(--bn-accent-2); animation:bn-pulse 1s ease-in-out infinite;}
+.bn-gps-dot.bn-error{background:var(--bn-danger); box-shadow:0 0 8px var(--bn-danger);}
+@keyframes bn-pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+
+/* ---------- Main / Map ---------- */
+#bn-main{position:relative; flex:1; min-height:0; overflow:hidden;}
+#bn-map{position:absolute; inset:0; background:#0f3552;}
+
+#bn-attribution{
+  position:absolute; left:6px; bottom:6px; z-index:410;
+  font-size:10px; color:var(--bn-fg-faint);
+  background:var(--bn-glass-bg); backdrop-filter:blur(8px);
+  padding:2px 7px; border-radius:6px; pointer-events:none;
+  border:1px solid var(--bn-line);
+}
+
+/* Normaler Standard-Pfeil (ohne SVG-Datei) */
+.bn-boat-marker{
+  display:flex; align-items:center; justify-content:center;
+  width:32px; height:32px;
+  transform-origin:50% 50%;
+}
+.bn-arrow-marker{
+  width:0; height:0;
+  border-left:9px solid transparent;
+  border-right:9px solid transparent;
+  border-bottom:22px solid var(--bn-accent);
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,0.6));
+}
+
+/* ---------- Map-eigene Steuerelemente (unten rechts) ---------- */
+#bn-map-controls{
+  position:absolute; right:calc(10px + var(--bn-safe-right)); bottom:calc(14px + var(--bn-hud-h) + var(--bn-safe-bottom));
+  display:flex; flex-direction:column; gap:8px; z-index:400;
+}
+.bn-map-btn{
+  width:42px; height:42px; border-radius:var(--bn-radius-s);
+  background:var(--bn-glass-bg); backdrop-filter:blur(var(--bn-glass-blur));
+  -webkit-backdrop-filter:blur(var(--bn-glass-blur));
+  border:1px solid var(--bn-line); color:var(--bn-fg); font-size:18px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; box-shadow:var(--bn-shadow-soft);
+  transition:transform .1s ease, background .15s ease;
+}
+.bn-map-btn:active{transform:scale(0.9); background:rgba(255,255,255,0.12);}
+.bn-map-btn.bn-active{color:var(--bn-accent); border-color:var(--bn-accent);}
+#bn-compass-btn svg{width:20px; height:20px; transition:transform .1s linear;}
+
+/* ---------- Overlay-Container (oben rechts) ---------- */
+#bn-overlay-container{
+  position:absolute; top:calc(10px + var(--bn-safe-top)); right:calc(10px + var(--bn-safe-right));
+  display:flex; flex-direction:column; gap:6px; align-items:flex-end;
+  z-index:400; max-width:min(58vw, 280px); pointer-events:none;
+}
+#bn-overlay-container > *{pointer-events:auto;}
+.bn-overlay-pill{
+  padding:7px 11px; border-radius:999px;
+  background:var(--bn-glass-bg); backdrop-filter:blur(var(--bn-glass-blur));
+  -webkit-backdrop-filter:blur(var(--bn-glass-blur));
+  border:1px solid var(--bn-line); font-size:12px; font-weight:600;
+  box-shadow:var(--bn-shadow-soft); white-space:nowrap;
+  display:flex; align-items:center; gap:6px;
+}
+
+.bn-offline-banner{
+  position:absolute; top:calc(10px + var(--bn-safe-top)); left:50%; transform:translateX(-50%);
+  background:rgba(255,93,93,0.16); border:1px solid var(--bn-danger); color:#ffd4d4;
+  padding:6px 14px; border-radius:999px; font-size:11.5px; font-weight:700;
+  backdrop-filter:blur(var(--bn-glass-blur)); z-index:450;
+  display:none; align-items:center; gap:6px; letter-spacing:.3px;
+}
+.bn-offline-banner.bn-show{display:flex;}
+
+/* ---------- Sidebar (Burger-Menü) ---------- */
+#bn-sidebar-scrim{
+  position:fixed; inset:0; background:rgba(0,0,0,0.5);
+  opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:600;
+}
+#bn-sidebar-scrim.bn-open{opacity:1; pointer-events:auto;}
+
+#bn-sidebar{
+  position:fixed; top:0; bottom:0; left:0;
+  width:min(320px, 84vw);
+  background:var(--bn-glass-bg-strong);
+  backdrop-filter:blur(20px) saturate(150%);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  border-right:1px solid var(--bn-line-strong);
+  transform:translateX(-100%);
+  transition:transform .28s cubic-bezier(.32,.72,.35,1);
+  z-index:650; display:flex; flex-direction:column;
+  box-shadow:2px 0 24px rgba(0,0,0,0.4);
+  padding-top:var(--bn-safe-top); padding-bottom:var(--bn-safe-bottom);
+}
+#bn-sidebar.bn-open{transform:translateX(0);}
+
+.bn-sidebar-head{
+  padding:18px 18px 14px; border-bottom:1px solid var(--bn-line);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.bn-sidebar-head h2{margin:0; font-size:16px; display:flex; align-items:center; gap:8px;}
+.bn-sidebar-close{
+  width:32px; height:32px; border-radius:var(--bn-radius-s); border:1px solid var(--bn-line);
+  background:transparent; color:var(--bn-fg-dim); font-size:16px; cursor:pointer;
+}
+
+.bn-sidebar-section{padding:14px 18px; overflow-y:auto; flex:1;}
+.bn-sidebar-section-label{
+  font-size:10.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+  color:var(--bn-fg-faint); margin:16px 0 8px;
+}
+.bn-sidebar-section-label:first-child{margin-top:0;}
+
+.bn-core-toggle-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 4px; font-size:14px; color:var(--bn-fg); gap:8px;
+}
+.bn-core-toggle-row .bn-sub{font-size:11px; color:var(--bn-fg-faint); font-weight:400;}
+
+.bn-unit-toggle{
+  display:flex; border:1px solid var(--bn-line); border-radius:999px; overflow:hidden;
+}
+.bn-unit-toggle button{
+  border:none; background:transparent; color:var(--bn-fg-dim); font-size:11px; font-weight:700;
+  padding:6px 9px; cursor:pointer;
+}
+.bn-unit-toggle button.bn-active{background:var(--bn-accent); color:#04211c;}
+
+#bn-module-list{display:flex; flex-direction:column; gap:6px;}
+.bn-module-card{
+  background:rgba(255,255,255,0.035); border:1px solid var(--bn-line); border-radius:var(--bn-radius-m);
+  padding:10px 12px; display:flex; align-items:center; gap:11px;
+}
+.bn-module-icon{
+  width:34px; height:34px; border-radius:var(--bn-radius-s); background:rgba(32,201,168,0.12);
+  display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;
+}
+.bn-module-meta{min-width:0; flex:1;}
+.bn-module-name{font-size:13.5px; font-weight:700;}
+.bn-module-desc{font-size:11px; color:var(--bn-fg-faint); line-height:1.3; margin-top:1px;}
+.bn-module-actions{display:flex; gap:6px; flex-shrink:0;}
+.bn-module-actions button{
+  border:1px solid var(--bn-line); background:transparent; color:var(--bn-fg-dim);
+  width:28px; height:28px; border-radius:7px; font-size:13px; cursor:pointer;
+}
+.bn-module-empty{
+  color:var(--bn-fg-faint); font-size:12.5px; text-align:center; padding:22px 8px;
+  border:1px dashed var(--bn-line); border-radius:var(--bn-radius-m);
+}
+.bn-module-mount{margin-top:8px; border-top:1px solid var(--bn-line); padding-top:8px;}
+
+.bn-sidebar-foot{
+  padding:12px 18px; border-top:1px solid var(--bn-line); font-size:10.5px;
+  color:var(--bn-fg-faint); display:flex; justify-content:space-between;
+}
+
+/* ---------- HUD ---------- */
+#bn-hud{
+  height:calc(var(--bn-hud-h) + var(--bn-safe-bottom));
+  padding-bottom:var(--bn-safe-bottom);
+  padding-left:calc(6px + var(--bn-safe-left));
+  padding-right:calc(6px + var(--bn-safe-right));
+  background:var(--bn-glass-bg-strong);
+  backdrop-filter:blur(var(--bn-glass-blur)) saturate(140%);
+  -webkit-backdrop-filter:blur(var(--bn-glass-blur)) saturate(140%);
+  border-top:1px solid var(--bn-line);
+  display:flex; align-items:stretch; gap:0;
+  flex-shrink:0; z-index:500;
+  overflow-x:auto; overflow-y:hidden;
+  box-shadow:0 -6px 24px rgba(0,0,0,0.35);
+}
+#bn-hud::-webkit-scrollbar{display:none;}
+
+.bn-hud-cell{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:6px 16px; min-width:82px; flex-shrink:0;
+  border-right:1px solid var(--bn-line);
+  position:relative;
+}
+.bn-hud-cell:last-child{border-right:none;}
+.bn-hud-label{
+  font-size:9px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase;
+  color:var(--bn-fg-faint); margin-bottom:3px; white-space:nowrap;
+}
+.bn-hud-value{
+  font-family:var(--bn-font-mono); font-size:21px; font-weight:700; line-height:1;
+  color:var(--bn-fg); white-space:nowrap; letter-spacing:0.5px;
+}
+.bn-hud-value .bn-hud-unit{font-size:11px; font-weight:600; color:var(--bn-fg-dim); margin-left:3px;}
+.bn-hud-cell.bn-hud-primary .bn-hud-value{color:var(--bn-accent);}
+.bn-hud-cell.bn-hud-clickable{cursor:pointer;}
+.bn-hud-cell.bn-hud-clickable:active{background:rgba(255,255,255,0.06);}
+
+#bn-hud-ext{display:flex; align-items:stretch;}
+
+/* ---------- Modal ---------- */
+#bn-modal-scrim{
+  position:fixed; inset:0; background:rgba(2,8,14,0.6);
+  backdrop-filter:blur(3px);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:900;
+}
+#bn-modal-scrim.bn-open{opacity:1; pointer-events:auto;}
+@media (min-width:640px){
+  #bn-modal-scrim{align-items:center;}
+}
+
+#bn-modal{
+  width:100%; max-width:560px; max-height:82vh;
+  background:var(--bn-deep-800); border:1px solid var(--bn-line-strong);
+  border-radius:var(--bn-radius-l) var(--bn-radius-l) 0 0;
+  box-shadow:0 -12px 40px rgba(0,0,0,0.5);
+  display:flex; flex-direction:column;
+  transform:translateY(24px); transition:transform .25s cubic-bezier(.32,.72,.35,1);
+  padding-bottom:var(--bn-safe-bottom);
+}
+#bn-modal-scrim.bn-open #bn-modal{transform:translateY(0);}
+@media (min-width:640px){
+  #bn-modal{border-radius:var(--bn-radius-l); max-height:78vh;}
+}
+
+.bn-modal-grip{width:38px; height:4px; background:var(--bn-line-strong); border-radius:2px; margin:10px auto 0;}
+.bn-modal-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 18px; border-bottom:1px solid var(--bn-line);
+}
+.bn-modal-head h3{margin:0; font-size:16px;}
+.bn-modal-close{
+  width:30px; height:30px; border-radius:8px; border:1px solid var(--bn-line);
+  background:transparent; color:var(--bn-fg-dim); font-size:15px; cursor:pointer;
+}
+.bn-modal-body{padding:16px 18px; overflow-y:auto; font-size:14px; line-height:1.55; color:var(--bn-fg-dim);}
+.bn-modal-body h1,.bn-modal-body h2,.bn-modal-body h3{color:var(--bn-fg);}
+.bn-modal-body table{width:100%; border-collapse:collapse; font-size:13px;}
+.bn-modal-body th, .bn-modal-body td{border:1px solid var(--bn-line); padding:6px 8px; text-align:left;}
+
+/* ---------- Toast ---------- */
+#bn-toast-stack{
+  position:fixed; left:50%; transform:translateX(-50%);
+  bottom:calc(var(--bn-hud-h) + var(--bn-safe-bottom) + 14px);
+  display:flex; flex-direction:column; gap:8px; z-index:950; align-items:center;
+  pointer-events:none; width:min(90vw, 380px);
+}
+.bn-toast{
+  background:var(--bn-glass-bg-strong); backdrop-filter:blur(var(--bn-glass-blur));
+  border:1px solid var(--bn-line-strong); color:var(--bn-fg); font-size:13px; font-weight:600;
+  padding:10px 16px; border-radius:999px; box-shadow:var(--bn-shadow);
+  opacity:0; transform:translateY(10px); transition:opacity .2s ease, transform .2s ease;
+  text-align:center;
+}
+.bn-toast.bn-show{opacity:1; transform:translateY(0);}
+.bn-toast.bn-warn{border-color:var(--bn-accent-2); color:#ffe0ac;}
+.bn-toast.bn-error{border-color:var(--bn-danger); color:#ffd4d4;}
+.bn-toast.bn-success{border-color:var(--bn-accent); color:#bdf5e8;}
+
+.bn-sidebar-section::-webkit-scrollbar, .bn-modal-body::-webkit-scrollbar{width:5px;}
+.bn-sidebar-section::-webkit-scrollbar-thumb, .bn-modal-body::-webkit-scrollbar-thumb{
+  background:var(--bn-line-strong); border-radius:3px;
+}
+
+/* ---------- Landscape-Anpassungen ---------- */
+@media (orientation:landscape) and (max-height:650px){
+  :root{--bn-header-h:42px; --bn-hud-h:56px;}
+  .bn-hud-value{font-size:15px;}
+  .bn-hud-label{font-size:8px;}
+  .bn-hud-cell{padding:3px 10px; min-width:60px;}
+
+  /* 6 Knöpfe verschieben sich im Querformat nach unten horizontal */
+  #bn-map-controls{
+    flex-direction:row;
+    bottom:calc(6px + var(--bn-safe-bottom));
+    right:calc(8px + var(--bn-safe-right));
+    gap:6px;
+  }
+  .bn-map-btn{ width:36px; height:36px; font-size:15px; }
+  #bn-compass-btn svg{ width:16px; height:16px; }
+
+  #bn-overlay-container{ max-width:min(46vw, 230px); top:calc(6px + var(--bn-safe-top)); right:calc(8px + var(--bn-safe-right)); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+}
+
+button:focus-visible, .bn-map-btn:focus-visible, .bn-icon-btn:focus-visible{
+  outline:2px solid var(--bn-accent); outline-offset:2px;
+}
+</style>
+</head>
+<body>
+
+<div id="bn-app">
+
+  <!-- ============ HEADER ============ -->
+  <header id="bn-header">
+    <div class="bn-header-side">
+      <button id="bn-burger-btn" class="bn-icon-btn" aria-label="Menü öffnen" title="Menü">☰</button>
+      <div id="bn-brand">
+        <img class="bn-logo-mark" src="logo.png" alt="" onerror="this.outerHTML='&lt;span class=&quot;bn-logo-mark&quot;&gt;📍&lt;/span&gt;';">
+        <div id="bn-brand-text">
+          <span>BootNav</span>
+          <span class="bn-brand-sub">Navigation</span>
+        </div>
+      </div>
+    </div>
+    <div class="bn-header-side">
+      <div class="bn-gps-pill" id="bn-gps-pill" title="GPS-Status">
+        <span class="bn-gps-dot" id="bn-gps-dot"></span>
+        <span id="bn-gps-text">Kein GPS</span>
+      </div>
+      <button id="bn-theme-btn" class="bn-icon-btn" aria-label="Theme wechseln" title="Design umschalten">🌙</button>
+    </div>
+  </header>
+
+  <!-- ============ MAIN / MAP ============ -->
+  <main id="bn-main">
+    <div id="bn-map"></div>
+    <div id="bn-attribution">© <span id="bn-attribution-text">OpenStreetMap-Mitwirkende</span></div>
+
+    <div class="bn-offline-banner" id="bn-offline-banner">📡 Offline — letzte bekannte Kartenkacheln</div>
+
+    <div id="bn-overlay-container"><!-- Module hängen hier Info-Pills ein --></div>
+
+    <div id="bn-map-controls">
+      <button class="bn-map-btn" id="bn-locate-btn" aria-label="Auf Position zentrieren" title="Zentrieren">🎯</button>
+      <button class="bn-map-btn" id="bn-compass-btn" aria-label="Kompass / Kartenausrichtung" title="Ausrichtung">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+      </button>
+      <button class="bn-map-btn" id="bn-layer-btn" aria-label="Kartenansicht umschalten" title="Karte / Satellit">🛰️</button>
+      <button class="bn-map-btn" id="bn-zoomin-btn" aria-label="Vergrößern" title="Zoom +">＋</button>
+      <button class="bn-map-btn" id="bn-zoomout-btn" aria-label="Verkleinern" title="Zoom −">－</button>
+      <button class="bn-map-btn" id="bn-fullscreen-btn" aria-label="Vollbild" title="Vollbild">⛶</button>
+    </div>
+  </main>
+
+  <!-- ============ HUD ============ -->
+  <footer id="bn-hud">
+    <div class="bn-hud-cell bn-hud-primary bn-hud-clickable" id="bn-hud-speed" title="Geschwindigkeit umschalten">
+      <span class="bn-hud-label">Speed</span>
+      <span class="bn-hud-value"><span id="bn-val-speed">0.0</span><span class="bn-hud-unit" id="bn-unit-speed">km/h</span></span>
+    </div>
+    <div class="bn-hud-cell">
+      <span class="bn-hud-label">Genauigkeit</span>
+      <span class="bn-hud-value"><span id="bn-val-acc">--</span><span class="bn-hud-unit">m</span></span>
+    </div>
+    <div class="bn-hud-cell">
+      <span class="bn-hud-label">Position</span>
+      <span class="bn-hud-value" style="font-size:13px;" id="bn-val-pos">--.-----, --.-----</span>
+    </div>
+    <div id="bn-hud-ext"><!-- Module hängen hier eigene HUD-Widgets ein --></div>
+  </footer>
+
+</div>
+
+<!-- ============ SIDEBAR ============ -->
+<div id="bn-sidebar-scrim"></div>
+<aside id="bn-sidebar" aria-label="Modul-Menü">
+  <div class="bn-sidebar-head">
+    <h2><img class="bn-logo-mark" src="logo.png" alt="" onerror="this.outerHTML='📍';"> BootNav</h2>
+    <button class="bn-sidebar-close" id="bn-sidebar-close-btn" aria-label="Menü schließen">✕</button>
+  </div>
+  <div class="bn-sidebar-section">
+
+    <div class="bn-sidebar-section-label">Einstellungen</div>
+    <div class="bn-core-toggle-row">
+      <span>Einheit<br><span class="bn-sub">Tempo</span></span>
+      <div class="bn-unit-toggle" id="bn-unit-toggle">
+        <button data-unit="kmh" class="bn-active">km/h</button>
+        <button data-unit="kn">kn</button>
+        <button data-unit="mph">mph</button>
+      </div>
+    </div>
+    <div class="bn-core-toggle-row">
+      <span>Design<br><span class="bn-sub">4 Styles</span></span>
+      <div class="bn-unit-toggle" id="bn-theme-toggle-side">
+        <button data-theme="dark" class="bn-active">Dark</button>
+        <button data-theme="light">Light</button>
+        <button data-theme="neon">Neon</button>
+        <button data-theme="outdoor">Outdoor</button>
+      </div>
+    </div>
+    <div class="bn-core-toggle-row">
+      <span>Bildschirm wach halten<br><span class="bn-sub">Kein Timeout</span></span>
+      <div class="bn-unit-toggle" id="bn-wakelock-toggle">
+        <button data-wakelock="off" class="bn-active">Aus</button>
+        <button data-wakelock="on">Ein</button>
+      </div>
+    </div>
+
+    <div class="bn-sidebar-section-label">Module (<span id="bn-module-count">0</span>)</div>
+    <div id="bn-module-list">
+      <div class="bn-module-empty" id="bn-module-empty">Noch keine Module registriert.<br>Erweiterungen erscheinen hier automatisch.</div>
+    </div>
+
+  </div>
+  <div class="bn-sidebar-foot">
+    <span>BootNav Core</span>
+    <span id="bn-version-tag">v1.1.0</span>
+  </div>
+</aside>
+
+<!-- ============ MODAL ============ -->
+<div id="bn-modal-scrim">
+  <div id="bn-modal" role="dialog" aria-modal="true" aria-labelledby="bn-modal-title">
+    <div class="bn-modal-grip"></div>
+    <div class="bn-modal-head">
+      <h3 id="bn-modal-title">Titel</h3>
+      <button class="bn-modal-close" id="bn-modal-close-btn" aria-label="Schließen">✕</button>
+    </div>
+    <div class="bn-modal-body" id="bn-modal-body"></div>
+  </div>
+</div>
+
+<!-- ============ TOASTS ============ -->
+<div id="bn-toast-stack"></div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ======================================================================
+   BOOTNAV CORE
+   ====================================================================== */
+
+const NM_PER_MS_TO_KNOTS = 1.9438444924; // m/s -> knots
+const KMH_PER_MS = 3.6;                  // m/s -> km/h
+const MPH_PER_MS = 2.2369362921;         // m/s -> mph
+
+const state = {
+  theme: 'dark',
+  speedUnit: 'kmh', // 'kmh' | 'kn' | 'mph' (Standard: kmh)
+  modules: new Map(),
+  positionListeners: [],
+  lastPosition: null,
+  watchId: null,
+  mapRotation: 0,
+  headingLock: false,
+  gpsStatus: 'none'
+};
+
+/* ---------------- DOM refs ---------------- */
+const $ = (id) => document.getElementById(id);
+const el = {
+  gpsDot: $('bn-gps-dot'), gpsText: $('bn-gps-text'),
+  burgerBtn: $('bn-burger-btn'), sidebar: $('bn-sidebar'), sidebarScrim: $('bn-sidebar-scrim'),
+  sidebarClose: $('bn-sidebar-close-btn'),
+  themeBtn: $('bn-theme-btn'), themeToggleSide: $('bn-theme-toggle-side'),
+  unitToggle: $('bn-unit-toggle'),
+  moduleList: $('bn-module-list'), moduleEmpty: $('bn-module-empty'), moduleCount: $('bn-module-count'),
+  overlayContainer: $('bn-overlay-container'),
+  hudExt: $('bn-hud-ext'),
+  valSpeed: $('bn-val-speed'), unitSpeed: $('bn-unit-speed'),
+  valAcc: $('bn-val-acc'), valPos: $('bn-val-pos'),
+  modalScrim: $('bn-modal-scrim'), modal: $('bn-modal'), modalTitle: $('bn-modal-title'),
+  modalBody: $('bn-modal-body'), modalClose: $('bn-modal-close-btn'),
+  toastStack: $('bn-toast-stack'),
+  locateBtn: $('bn-locate-btn'), compassBtn: $('bn-compass-btn'),
+  zoomInBtn: $('bn-zoomin-btn'), zoomOutBtn: $('bn-zoomout-btn'), fullscreenBtn: $('bn-fullscreen-btn'),
+  offlineBanner: $('bn-offline-banner'), hudSpeedCell: $('bn-hud-speed'),
+  bnMain: $('bn-main'), layerBtn: $('bn-layer-btn'), attributionText: $('bn-attribution-text'),
+  wakelockToggle: $('bn-wakelock-toggle')
+};
+
+/* ---------------- Toasts ---------------- */
+function showToast(message, kind){
+  const t = document.createElement('div');
+  t.className = 'bn-toast' + (kind ? ' bn-' + kind : '');
+  t.textContent = message;
+  el.toastStack.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('bn-show'));
+  setTimeout(() => {
+    t.classList.remove('bn-show');
+    setTimeout(() => t.remove(), 250);
+  }, 3200);
+}
+
+/* ---------------- Modal ---------------- */
+function openModal(title, contentHtml){
+  el.modalTitle.textContent = title || '';
+  if (contentHtml instanceof Node) {
+    el.modalBody.innerHTML = '';
+    el.modalBody.appendChild(contentHtml);
+  } else {
+    el.modalBody.innerHTML = contentHtml || '';
+  }
+  el.modalScrim.classList.add('bn-open');
+}
+function closeModal(){ el.modalScrim.classList.remove('bn-open'); }
+el.modalClose.addEventListener('click', closeModal);
+el.modalScrim.addEventListener('click', (e) => { if (e.target === el.modalScrim) closeModal(); });
+
+/* ---------------- Sidebar ---------------- */
+function openSidebar(){ el.sidebar.classList.add('bn-open'); el.sidebarScrim.classList.add('bn-open'); }
+function closeSidebar(){ el.sidebar.classList.remove('bn-open'); el.sidebarScrim.classList.remove('bn-open'); }
+el.burgerBtn.addEventListener('click', openSidebar);
+el.sidebarClose.addEventListener('click', closeSidebar);
+el.sidebarScrim.addEventListener('click', closeSidebar);
+
+/* ---------------- 4 Themes ---------------- */
+const THEME_ICONS = { dark: '🌙', light: '☀️', neon: '⚡', outdoor: '🏕️' };
+
+function applyTheme(theme){
+  if (!THEME_ICONS[theme]) theme = 'dark';
+  state.theme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  el.themeBtn.textContent = THEME_ICONS[theme];
+  [...el.themeToggleSide.children].forEach(b => b.classList.toggle('bn-active', b.dataset.theme === theme));
+  try { localStorage.setItem('bn-theme', theme); } catch(e){}
+}
+const themesList = ['dark', 'light', 'neon', 'outdoor'];
+el.themeBtn.addEventListener('click', () => {
+  const nextIdx = (themesList.indexOf(state.theme) + 1) % themesList.length;
+  applyTheme(themesList[nextIdx]);
+});
+el.themeToggleSide.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-theme]');
+  if (btn) applyTheme(btn.dataset.theme);
+});
+(function initTheme(){
+  let saved = null;
+  try { saved = localStorage.getItem('bn-theme'); } catch(e){}
+  applyTheme(saved || 'dark');
+})();
+
+/* ---------------- Einheiten (km/h, kn, mph) ---------------- */
+function applySpeedUnit(unit){
+  state.speedUnit = unit;
+  el.unitSpeed.textContent = unit === 'kn' ? 'kn' : unit === 'mph' ? 'mph' : 'km/h';
+  [...el.unitToggle.children].forEach(b => b.classList.toggle('bn-active', b.dataset.unit === unit));
+  renderPosition(state.lastPosition);
+  try { localStorage.setItem('bn-speed-unit', unit); } catch(e){}
+}
+el.unitToggle.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-unit]');
+  if (btn) applySpeedUnit(btn.dataset.unit);
+});
+el.hudSpeedCell.addEventListener('click', () => {
+  const nextUnit = state.speedUnit === 'kmh' ? 'kn' : state.speedUnit === 'kn' ? 'mph' : 'kmh';
+  applySpeedUnit(nextUnit);
+});
+(function initUnit(){
+  let saved = null;
+  try { saved = localStorage.getItem('bn-speed-unit'); } catch(e){}
+  applySpeedUnit(saved || 'kmh');
+})();
+
+/* ---------------- Bildschirm wach halten ---------------- */
+let wakeLockSentinel = null;
+let wakeLockWanted = false;
+
+async function acquireWakeLock(){
+  if (!('wakeLock' in navigator)) return false;
+  try {
+    wakeLockSentinel = await navigator.wakeLock.request('screen');
+    wakeLockSentinel.addEventListener('release', () => { wakeLockSentinel = null; });
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+function releaseWakeLock(){
+  if (wakeLockSentinel) { wakeLockSentinel.release().catch(() => {}); wakeLockSentinel = null; }
+}
+function applyWakeLockSetting(on){
+  wakeLockWanted = on;
+  [...el.wakelockToggle.children].forEach(b => b.classList.toggle('bn-active', b.dataset.wakelock === (on ? 'on' : 'off')));
+  try { localStorage.setItem('bn-wakelock', on ? '1' : '0'); } catch(e){}
+  if (on){
+    if (!('wakeLock' in navigator)) {
+      showToast('Wach-Halten nicht unterstützt', 'warn');
+      return;
+    }
+    acquireWakeLock().then(ok => { if (ok) showToast('Bildschirm bleibt an', 'success'); });
+  } else {
+    releaseWakeLock();
+    showToast('Bildschirm-Timeout normal', 'success');
+  }
+}
+el.wakelockToggle.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-wakelock]');
+  if (btn) applyWakeLockSetting(btn.dataset.wakelock === 'on');
+});
+document.addEventListener('visibilitychange', () => {
+  if (wakeLockWanted && document.visibilityState === 'visible' && !wakeLockSentinel) {
+    acquireWakeLock();
+  }
+});
+(function initWakeLock(){
+  let saved = null;
+  try { saved = localStorage.getItem('bn-wakelock'); } catch(e){}
+  if (saved === '1') applyWakeLockSetting(true);
+})();
+
+/* ---------------- MapLibre GL Karte ---------------- */
+const SATELLITE_STYLE = {
+  version: 8,
+  sources: {
+    esri: {
+      type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      tileSize: 256,
+      maxzoom: 17
+    }
+  },
+  layers: [{ id: 'esri-satellite', type: 'raster', source: 'esri' }]
+};
+const STREET_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+const TILE_ATTRIBUTIONS = {
+  street: 'OpenStreetMap-Mitwirkende · OpenFreeMap',
+  satellite: 'Esri, Maxar, Earthstar Geographics'
+};
+let activeLayerId = 'street';
+
+const map = new maplibregl.Map({
+  container: 'bn-map',
+  style: STREET_STYLE_URL,
+  center: [10.1228, 54.3233],
+  zoom: 12,
+  minZoom: 3,
+  maxZoom: 19,
+  attributionControl: false,
+  dragRotate: true,
+  touchZoomRotate: true,
+  touchPitch: false,
+  pitchWithRotate: false,
+  antialias: true
+});
+map.touchZoomRotate.enableRotation();
+
+/* ---------------- Genauigkeitskreis ---------------- */
+function addAccuracyLayer(){
+  if (map.getSource('bn-accuracy')) return;
+  map.addSource('bn-accuracy', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({
+    id: 'bn-accuracy-fill', type: 'fill', source: 'bn-accuracy',
+    paint: { 'fill-color': '#20c9a8', 'fill-opacity': 0.08 }
+  });
+  map.addLayer({
+    id: 'bn-accuracy-line', type: 'line', source: 'bn-accuracy',
+    paint: { 'line-color': '#20c9a8', 'line-width': 1 }
+  });
+}
+function circleFeature(lon, lat, radiusMeters, steps){
+  steps = steps || 64;
+  const coords = [];
+  const distRad = radiusMeters / 6371000;
+  const latRad = lat * Math.PI / 180, lonRad = lon * Math.PI / 180;
+  for (let i = 0; i <= steps; i++){
+    const bearing = (i / steps) * 2 * Math.PI;
+    const lat2 = Math.asin(Math.sin(latRad) * Math.cos(distRad) + Math.cos(latRad) * Math.sin(distRad) * Math.cos(bearing));
+    const lon2 = lonRad + Math.atan2(
+      Math.sin(bearing) * Math.sin(distRad) * Math.cos(latRad),
+      Math.cos(distRad) - Math.sin(latRad) * Math.sin(lat2)
+    );
+    coords.push([lon2 * 180 / Math.PI, lat2 * 180 / Math.PI]);
+  }
+  return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] }, properties: {} };
+}
+function updateAccuracyCircle(lon, lat, radiusMeters){
+  if (radiusMeters == null || isNaN(radiusMeters)) return;
+  const src = map.getSource('bn-accuracy');
+  if (!src) return;
+  src.setData(circleFeature(lon, lat, radiusMeters));
+}
+map.on('load', addAccuracyLayer);
+
+/* ---------------- Satelliten-Umschalter ---------------- */
+function setTileLayer(id){
+  if (id === activeLayerId) return;
+  activeLayerId = id;
+  map.setStyle(id === 'satellite' ? SATELLITE_STYLE : STREET_STYLE_URL);
+  map.once('idle', () => {
+    addAccuracyLayer();
+    if (state.lastPosition) updateAccuracyCircle(state.lastPosition.lon, state.lastPosition.lat, state.lastPosition.accuracy);
+  });
+  el.attributionText.textContent = TILE_ATTRIBUTIONS[activeLayerId];
+  el.layerBtn.textContent = activeLayerId === 'satellite' ? '🗺️' : '🛰️';
+}
+el.layerBtn.addEventListener('click', () => setTileLayer(activeLayerId === 'street' ? 'satellite' : 'street'));
+
+/* ---------------- Normaler Pfeil Marker (Ohne SVG-Datei) ---------------- */
+function boatIconHtml(){
+  return `<div class="bn-boat-marker"><div class="bn-arrow-marker"></div></div>`;
+}
+const boatWrap = document.createElement('div');
+boatWrap.innerHTML = boatIconHtml();
+const boatMarker = new maplibregl.Marker({ element: boatWrap.firstElementChild, rotationAlignment: 'map', pitchAlignment: 'map' });
+let boatMarkerAdded = false;
+
+function ensureBoatMarker(lon, lat){
+  boatMarker.setLngLat([lon, lat]);
+  if (!boatMarkerAdded){ boatMarker.addTo(map); boatMarkerAdded = true; }
+}
+function updateBoatHeading(headingDeg){
+  boatMarker.setRotation(headingDeg || 0);
+}
+
+/* ---------------- Map-Controls ---------------- */
+el.zoomInBtn.addEventListener('click', () => map.zoomIn({ duration: 250 }));
+el.zoomOutBtn.addEventListener('click', () => map.zoomOut({ duration: 250 }));
+
+let followMode = true;
+el.locateBtn.addEventListener('click', () => {
+  followMode = true;
+  el.locateBtn.classList.add('bn-active');
+  if (state.lastPosition){
+    map.easeTo({ center: [state.lastPosition.lon, state.lastPosition.lat], zoom: Math.max(map.getZoom(), 14), duration: 400 });
+  }
+});
+map.on('dragstart', () => { followMode = false; el.locateBtn.classList.remove('bn-active'); });
+
+el.compassBtn.addEventListener('click', () => {
+  state.headingLock = !state.headingLock;
+  el.compassBtn.classList.toggle('bn-active', state.headingLock);
+  showToast(state.headingLock ? 'Kartenausrichtung: Kurs oben' : 'Kartenausrichtung: Nord oben', 'success');
+  if (!state.headingLock) map.easeTo({ bearing: 0, duration: 400 });
+});
+map.on('rotate', () => {
+  const svg = el.compassBtn.querySelector('svg');
+  if (svg) svg.style.transform = `rotate(${-map.getBearing()}deg)`;
+  state.mapRotation = map.getBearing();
+});
+
+/* ---------------- Vollbild ---------------- */
+function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function fsSupported(){
+  const el = document.documentElement;
+  return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || el.requestFullscreen || el.webkitRequestFullscreen);
+}
+function requestFs(el){
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen;
+  return fn ? fn.call(el) : Promise.reject(new Error('Fullscreen API nicht verfügbar'));
+}
+function exitFs(){
+  const fn = document.exitFullscreen || document.webkitExitFullscreen;
+  return fn ? fn.call(document) : Promise.reject(new Error('Fullscreen API nicht verfügbar'));
+}
+function updateFullscreenBtn(){
+  el.fullscreenBtn.classList.toggle('bn-active', !!fsElement());
+}
+document.addEventListener('fullscreenchange', updateFullscreenBtn);
+document.addEventListener('webkitfullscreenchange', updateFullscreenBtn);
+
+el.fullscreenBtn.addEventListener('click', () => {
+  if (fsElement()){
+    exitFs().catch(() => {});
+    return;
+  }
+  if (!fsSupported()){
+    showToast('Vollbild wird von diesem Browser nicht unterstützt', 'warn');
+    return;
+  }
+  requestFs(document.documentElement).catch(() => showToast('Vollbild nicht verfügbar', 'warn'));
+});
+
+/* ---------------- Offline-Erkennung ---------------- */
+function updateOnlineStatus(){
+  const offline = !navigator.onLine;
+  el.offlineBanner.classList.toggle('bn-show', offline);
+  if (offline) showToast('Verbindung verloren — arbeite mit Kartenkachel-Cache', 'warn');
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+/* ---------------- GPS ---------------- */
+function setGpsStatus(status, text){
+  state.gpsStatus = status;
+  el.gpsDot.className = 'bn-gps-dot' + (status === 'live' ? ' bn-live' : status === 'searching' ? ' bn-searching' : status === 'error' ? ' bn-error' : '');
+  el.gpsText.textContent = text;
+}
+
+function haversineBearing(lat1, lon1, lat2, lon2){
+  const toRad = d => d * Math.PI / 180;
+  const toDeg = r => r * 180 / Math.PI;
+  const dLon = toRad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+  const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+function renderPosition(p){
+  if (!p) return;
+  let speedVal = (p.speed || 0) * KMH_PER_MS;
+  if (state.speedUnit === 'kn') speedVal = (p.speed || 0) * NM_PER_MS_TO_KNOTS;
+  if (state.speedUnit === 'mph') speedVal = (p.speed || 0) * MPH_PER_MS;
+
+  el.valSpeed.textContent = speedVal.toFixed(1);
+  el.valAcc.textContent = (p.accuracy != null) ? Math.round(p.accuracy) : '--';
+  el.valPos.textContent = `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`;
+}
+
+function handlePosition(pos){
+  const c = pos.coords;
+  let heading = c.heading;
+  if ((heading == null || isNaN(heading)) && state.lastPosition){
+    heading = haversineBearing(state.lastPosition.lat, state.lastPosition.lon, c.latitude, c.longitude);
+  }
+  const data = {
+    lat: c.latitude, lon: c.longitude,
+    speed: c.speed != null && !isNaN(c.speed) ? c.speed : 0,
+    heading: heading != null && !isNaN(heading) ? heading : (state.lastPosition ? state.lastPosition.heading : 0),
+    accuracy: c.accuracy,
+    timestamp: pos.timestamp
+  };
+  state.lastPosition = data;
+  setGpsStatus('live', 'GPS aktiv');
+
+  ensureBoatMarker(data.lon, data.lat);
+  updateBoatHeading(data.heading);
+  updateAccuracyCircle(data.lon, data.lat, data.accuracy);
+  renderPosition(data);
+
+  if (followMode) map.easeTo({ center: [data.lon, data.lat], zoom: map.getZoom() < 5 ? 14 : map.getZoom(), duration: 500 });
+  if (state.headingLock) map.easeTo({ bearing: data.heading, duration: 400 });
+
+  state.positionListeners.forEach(cb => {
+    try { cb(data); } catch(err){ console.error('BootNav: Fehler in Callback', err); }
+  });
+}
+
+function handlePositionError(err){
+  setGpsStatus('error', 'GPS-Fehler');
+  showToast('GPS nicht verfügbar: ' + (err && err.message ? err.message : 'unbekannter Fehler'), 'error');
+}
+
+function startGps(){
+  if (!('geolocation' in navigator)){
+    setGpsStatus('error', 'Kein GPS-Support');
+    showToast('Dieses Gerät unterstützt keine Geolokalisierung', 'error');
+    return;
+  }
+  setGpsStatus('searching', 'Suche…');
+  state.watchId = navigator.geolocation.watchPosition(handlePosition, handlePositionError, {
+    enableHighAccuracy: true,
+    maximumAge: 1000,
+    timeout: 15000
+  });
+}
+startGps();
+
+/* ======================================================================
+   ÖFFENTLICHE MODUL-API
+   ====================================================================== */
+
+function renderModuleList(){
+  el.moduleCount.textContent = state.modules.size;
+  el.moduleEmpty.style.display = state.modules.size === 0 ? 'block' : 'none';
+  [...el.moduleList.querySelectorAll('.bn-module-card')].forEach(n => n.remove());
+
+  state.modules.forEach(cfg => {
+    const card = document.createElement('div');
+    card.className = 'bn-module-card';
+    card.dataset.moduleId = cfg.id;
+    card.innerHTML = `
+      <div class="bn-module-icon">${cfg.icon || '🧩'}</div>
+      <div class="bn-module-meta">
+        <div class="bn-module-name">${escapeHtml(cfg.name)}</div>
+        <div class="bn-module-desc">${escapeHtml(cfg.description || '')}</div>
+      </div>
+    `;
+    if (cfg.onOpen || cfg.settingsHtml){
+      const actions = document.createElement('div');
+      actions.className = 'bn-module-actions';
+      const btn = document.createElement('button');
+      btn.textContent = '⚙️';
+      btn.setAttribute('aria-label', cfg.name + ' Einstellungen');
+      btn.addEventListener('click', () => {
+        if (typeof cfg.onOpen === 'function') cfg.onOpen();
+        else if (cfg.settingsHtml) openModal(cfg.name, cfg.settingsHtml);
+      });
+      actions.appendChild(btn);
+      card.appendChild(actions);
+    }
+    if (cfg.sidebarMount){
+      const mount = document.createElement('div');
+      mount.className = 'bn-module-mount';
+      if (cfg.sidebarMount instanceof Node) mount.appendChild(cfg.sidebarMount);
+      else mount.innerHTML = cfg.sidebarMount;
+      card.appendChild(mount);
+    }
+    el.moduleList.appendChild(card);
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
+}
+
+function mountWidget(container, id, contentOrElement, wrapperClass){
+  let node = container.querySelector(`[data-widget-id="${id}"]`);
+  if (!node){
+    node = document.createElement('div');
+    node.dataset.widgetId = id;
+    if (wrapperClass) node.className = wrapperClass;
+    container.appendChild(node);
+  }
+  if (contentOrElement instanceof Node){
+    node.innerHTML = '';
+    node.appendChild(contentOrElement);
+  } else {
+    node.innerHTML = contentOrElement;
+  }
+  return node;
+}
+
+const BootNav = {
+  VERSION: '1.1.0',
+
+  registerModule(config){
+    if (!config || !config.id) return false;
+    state.modules.set(config.id, config);
+    renderModuleList();
+    return true;
+  },
+
+  unregisterModule(id){
+    const removed = state.modules.delete(id);
+    if (removed) renderModuleList();
+    return removed;
+  },
+
+  getMap(){ return map; },
+
+  onPositionUpdate(callback){
+    if (typeof callback !== 'function') return () => {};
+    state.positionListeners.push(callback);
+    if (state.lastPosition) { try { callback(state.lastPosition); } catch(e){} }
+    return () => {
+      const idx = state.positionListeners.indexOf(callback);
+      if (idx >= 0) state.positionListeners.splice(idx, 1);
+    };
+  },
+
+  getLastPosition(){ return state.lastPosition; },
+
+  addHudWidget(id, htmlContentOrElement){
+    return mountWidget(el.hudExt, id, htmlContentOrElement, 'bn-hud-cell');
+  },
+
+  removeHudWidget(id){
+    const node = el.hudExt.querySelector(`[data-widget-id="${id}"]`);
+    if (node) node.remove();
+  },
+
+  addOverlayWidget(id, htmlContentOrElement){
+    return mountWidget(el.overlayContainer, id, htmlContentOrElement, 'bn-overlay-pill');
+  },
+
+  removeOverlayWidget(id){
+    const node = el.overlayContainer.querySelector(`[data-widget-id="${id}"]`);
+    if (node) node.remove();
+  },
+
+  openModal(title, contentHtml){ openModal(title, contentHtml); },
+  closeModal(){ closeModal(); },
+  showToast(message, kind){ showToast(message, kind); },
+  openSidebar, closeSidebar,
+
+  getState(){
+    return {
+      theme: state.theme,
+      speedUnit: state.speedUnit,
+      gpsStatus: state.gpsStatus,
+      moduleCount: state.modules.size
+    };
+  },
+
+  convertSpeed(speedMs){
+    if (state.speedUnit === 'kn') return speedMs * NM_PER_MS_TO_KNOTS;
+    if (state.speedUnit === 'mph') return speedMs * MPH_PER_MS;
+    return speedMs * KMH_PER_MS;
+  }
+};
+
+window.BootNav = BootNav;
+renderModuleList();
+
+function forceMapResize(){ map.resize(); }
+window.addEventListener('resize', forceMapResize);
+window.addEventListener('orientationchange', () => {
+  forceMapResize();
+  setTimeout(forceMapResize, 150);
+  setTimeout(forceMapResize, 400);
+});
+if ('ResizeObserver' in window){
+  new ResizeObserver(forceMapResize).observe(el.bnMain);
+}
+if (window.visualViewport){
+  window.visualViewport.addEventListener('resize', forceMapResize);
+}
+
+})();
+</script>
+<script src="weather.js"></script>
+<script src="speed-stats.js"></script>
+<script src="gpx-module.js"></script>
+</body>
+</html>
