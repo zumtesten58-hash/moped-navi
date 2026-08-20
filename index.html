@@ -2,19 +2,19 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>BootNav</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Navi</title>
 <link rel="icon" type="image/png" href="logo.png">
 <meta name="theme-color" content="#0a1420">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BootNav">
+<meta name="apple-mobile-web-app-title" content="Navi">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
 /* ======================================================================
-   BOOTNAV — BASIS-MODUL
+   Navi — BASIS-MODUL
    Design: 4 Themes (Dark, Light, Neon, Outdoor), Touch-first
    ====================================================================== */
 
@@ -519,7 +519,7 @@ button:focus-visible, .bn-map-btn:focus-visible, .bn-icon-btn:focus-visible{
       <div id="bn-brand">
         <img class="bn-logo-mark" src="logo.png" alt="" onerror="this.outerHTML='&lt;span class=&quot;bn-logo-mark&quot;&gt;📍&lt;/span&gt;';">
         <div id="bn-brand-text">
-          <span>BootNav</span>
+          <span>Navi</span>
           <span class="bn-brand-sub">Navigation</span>
         </div>
       </div>
@@ -577,7 +577,7 @@ button:focus-visible, .bn-map-btn:focus-visible, .bn-icon-btn:focus-visible{
 <div id="bn-sidebar-scrim"></div>
 <aside id="bn-sidebar" aria-label="Modul-Menü">
   <div class="bn-sidebar-head">
-    <h2><img class="bn-logo-mark" src="logo.png" alt="" onerror="this.outerHTML='📍';"> BootNav</h2>
+    <h2><img class="bn-logo-mark" src="logo.png" alt="" onerror="this.outerHTML='📍';"> Navi</h2>
     <button class="bn-sidebar-close" id="bn-sidebar-close-btn" aria-label="Menü schließen">✕</button>
   </div>
   <div class="bn-sidebar-section">
@@ -615,7 +615,7 @@ button:focus-visible, .bn-map-btn:focus-visible, .bn-icon-btn:focus-visible{
 
   </div>
   <div class="bn-sidebar-foot">
-    <span>BootNav Core</span>
+    <span>Navi Core</span>
     <span id="bn-version-tag">v1.1.0</span>
   </div>
 </aside>
@@ -641,7 +641,7 @@ button:focus-visible, .bn-map-btn:focus-visible, .bn-icon-btn:focus-visible{
 "use strict";
 
 /* ======================================================================
-   BOOTNAV CORE
+   Navi CORE
    ====================================================================== */
 
 const NM_PER_MS_TO_KNOTS = 1.9438444924; // m/s -> knots
@@ -1037,7 +1037,7 @@ function handlePosition(pos){
   if (state.headingLock) map.easeTo({ bearing: data.heading, duration: 400 });
 
   state.positionListeners.forEach(cb => {
-    try { cb(data); } catch(err){ console.error('BootNav: Fehler in Callback', err); }
+    try { cb(data); } catch(err){ console.error('Navi: Fehler in Callback', err); }
   });
 }
 
@@ -1128,7 +1128,7 @@ function mountWidget(container, id, contentOrElement, wrapperClass){
   return node;
 }
 
-const BootNav = {
+const Navi = {
   VERSION: '1.1.0',
 
   registerModule(config){
@@ -1197,7 +1197,7 @@ const BootNav = {
   }
 };
 
-window.BootNav = BootNav;
+window.Navi = Navi;
 renderModuleList();
 
 function forceMapResize(){ map.resize(); }
