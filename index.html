@@ -237,7 +237,7 @@ button{font-family:inherit;}
 }
 
 /* Normaler Standard-Pfeil (ohne SVG-Datei) */
-.bn-boat-marker{
+.nav-position-marker{
   display:flex; align-items:center; justify-content:center;
   width:32px; height:32px;
   transform-origin:50% 50%;
@@ -902,7 +902,7 @@ el.layerBtn.addEventListener('click', () => setTileLayer(activeLayerId === 'stre
 
 /* ---------------- Normaler Pfeil Marker (Ohne SVG-Datei) ---------------- */
 function boatIconHtml(){
-  return `<div class="bn-boat-marker"><div class="bn-arrow-marker"></div></div>`;
+  return `<div class="nav-position-marker"><div class="bn-arrow-marker"></div></div>`;
 }
 const boatWrap = document.createElement('div');
 boatWrap.innerHTML = boatIconHtml();
