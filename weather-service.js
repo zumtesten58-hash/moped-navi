@@ -152,19 +152,39 @@
       gap: 6px;
     }
     .bn-weather-daily-item {
-      display: grid;
-      grid-template-columns: 70px 28px 1fr auto;
-      align-items: center;
-      gap: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       background: rgba(255,255,255,0.03);
       border: 1px solid var(--bn-line);
       border-radius: var(--bn-radius-s);
       padding: 8px 10px;
       font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease;
+    }
+    .bn-weather-daily-item:active {
+      background: rgba(255,255,255,0.06);
+    }
+    .bn-weather-daily-main {
+      display: grid;
+      grid-template-columns: 65px 30px 1fr;
+      align-items: center;
+      gap: 8px;
     }
     .bn-weather-daily-item .bn-day { font-weight: 700; }
-    .bn-weather-daily-item .bn-desc { color: var(--bn-fg-dim); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bn-weather-daily-item .bn-stats { font-family: var(--bn-font-mono); font-size: 11px; text-align: right; }
+    .bn-weather-daily-extra {
+      display: none;
+      font-size: 11px;
+      color: var(--bn-fg-dim);
+      padding-top: 4px;
+      border-top: 1px dashed var(--bn-line);
+    }
+    .bn-weather-daily-item.bn-expanded .bn-weather-daily-extra {
+      display: block;
+    }
   `;
   document.head.appendChild(style);
 
@@ -385,13 +405,17 @@
         const dGust = formatSpeedValue(daily.wind_gusts_10m_max[i], unit);
 
         html += `
-          <div class="bn-weather-daily-item">
-            <span class="bn-day">${dayName}</span>
-            <span style="font-size:16px;">${dMeta.icon}</span>
-            <span class="bn-desc">${dMeta.text}</span>
-            <div class="bn-stats">
-              <div><strong>${dMax}°</strong> / ${dMin}°</div>
-              <div style="color:var(--bn-fg-faint); font-size:9.5px;">💧${dRain}mm · 💨${dWind} (Böen ${dGust})</div>
+          <div class="bn-weather-daily-item" onclick="this.classList.toggle('bn-expanded')">
+            <div class="bn-weather-daily-main">
+              <span class="bn-day">${dayName}</span>
+              <span style="font-size:16px;">${dMeta.icon}</span>
+              <div class="bn-stats">
+                <div><strong>${dMax}°</strong> / ${dMin}°</div>
+                <div style="color:var(--bn-fg-faint); font-size:9.5px;">💧${dRain}mm · 💨${dWind} (Böen ${dGust})</div>
+              </div>
+            </div>
+            <div class="bn-weather-daily-extra">
+              <strong>Wetterlage:</strong> ${dMeta.text}
             </div>
           </div>
         `;
@@ -486,4 +510,3 @@
   }
 
 })();
-
