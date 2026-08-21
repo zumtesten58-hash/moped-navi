@@ -1,44 +1,5 @@
 /* ============================================================================
-   NAVI ROUTING-MODUL
-   Andockt an window.Navi (siehe registerModule/getMap/onPositionUpdate/...)
-   Keine Änderung am Hauptcode nötig — einfach zusätzlich einbinden:
-     <script src="navi-routing-modul.js"></script>
-   (genau wie weather-service.js bereits eingebunden ist)
-
-   WAS DAS MODUL MACHT
-   --------------------
-   - Eigener Routing-Graph aus echten OSM-Straßendaten (Overpass API),
-     keine fertige Fremd-Route -> volle Kontrolle über die Gewichtung.
-   - Fahrzeugprofil: Höchstgeschwindigkeit (an/aus, frei wählbar),
-     Autobahn/Schnellstraßen/Maut meiden.
-   - Straßen mit Mindestgeschwindigkeit (z.B. Autobahn) werden automatisch
-     ausgeschlossen, sobald die eingestellte Fahrzeug-Höchstgeschwindigkeit
-     darunter liegt — unabhängig vom Meiden-Schalter, weil dort gesetzlich
-     gar nicht gefahren werden darf.
-   - Ruhe-Regler 0-100%: gewichtet befahrene/städtische Straßen ab,
-     bevorzugt Nebenstraßen und ruhiges Hinterland.
-   - Kostenformel pro Segment:
-       C = (Länge / min(v_Straße, v_Fahrzeug)) * (1 + Faktor_Ruhe * Gewicht_Umgebung)
-   - Start = eigene Position (GPS) ODER frei auf der Karte gewählt.
-   - Ziel = auf der Karte gewählt ODER per Adresssuche (Nominatim).
-   - Route wird als Linie auf der MapLibre-Karte gezeichnet (Straße & Satellit).
-   - Optionale Abbiegehinweise (kleine Anzeige, wann/wohin abbiegen) —
-     Ein/Aus-Zustand wird gespeichert und bleibt über Neustarts erhalten.
-   - Unterstützt alle 4 Design-Themes automatisch (nutzt die CSS-Variablen
-     des Hauptcodes, kein eigenes Farbschema).
-
-   BEKANNTE VEREINFACHUNGEN (technisch ehrlich, damit nichts überrascht)
-   -----------------------------------------------------------------------
-   - Straßendaten kommen live von der öffentlichen Overpass-API. Das ist
-     kostenlos, aber nicht beliebig schnell/robust bei sehr großen Gebieten
-     -> Anfrage ist auf einen Korridor um Start/Ziel begrenzt.
-   - "Ruhe" wird über Landnutzungsflächen (landuse=residential/commercial/...)
-     + Straßenklasse angenähert, nicht über echte Verkehrszähldaten (die gibt
-     es in OSM nicht flächendeckend).
-   - Mindestgeschwindigkeiten sind in OSM selten explizit getaggt
-     (minspeed=*). Fehlt der Tag, wird für Autobahnen ein realistischer
-     Standardwert angenommen (editierbar unten, MOTORWAY_MIN_SPEED_DEFAULT).
-   - Start/Ziel werden auf den nächsten bekannten Straßenknoten "eingerastet".
+   NAVI ROUTING-MODUL (UPDATED)
    ========================================================================= */
 
 (function () {
@@ -46,7 +7,6 @@
 
   function boot() {
     if (!window.Navi || typeof window.Navi.registerModule !== "function") {
-      // Hauptcode noch nicht bereit -> kurz später erneut versuchen
       setTimeout(boot, 150);
       return;
     }
@@ -65,11 +25,10 @@
     ];
     const NOMINATIM_ENDPOINT = "https://nominatim.openstreetmap.org/search";
 
-    const MOTORWAY_MIN_SPEED_DEFAULT = 60; // km/h, falls kein minspeed-Tag vorhanden
-    const CORRIDOR_MARGIN_KM = 3;          // Puffer links/rechts des Direktkorridors
-    const MAX_BBOX_DIAGONAL_KM = 120;      // Sicherheitsgrenze gegen Riesenanfragen
+    const MOTORWAY_MIN_SPEED_DEFAULT = 60;
+    const CORRIDOR_MARGIN_KM = 3;
+    const MAX_BBOX_DIAGONAL_KM = 120;
 
-    // Standard-Geschwindigkeiten (km/h) je Straßentyp, falls kein maxspeed-Tag da ist
     const DEFAULT_SPEED_BY_HIGHWAY = {
       motorway: 130, motorway_link: 60,
       trunk: 100, trunk_link: 50,
@@ -84,7 +43,6 @@
       road: 50
     };
 
-    // Straßentypen, die grundsätzlich als Routing-Kanten erlaubt sind
     const ROUTABLE_HIGHWAYS = new Set([
       "motorway", "motorway_link", "trunk", "trunk_link",
       "primary", "primary_link", "secondary", "secondary_link",
@@ -92,8 +50,6 @@
       "living_street", "service", "track", "road"
     ]);
 
-    // Umgebungs-Gewicht je Straßenklasse (Basisgewicht, wird ggf. durch
-    // Landnutzung "Stadt" weiter angehoben) — kleine Zahl = ruhig/bevorzugt
     const BASE_ENV_WEIGHT = {
       motorway: 1.0, motorway_link: 0.9,
       trunk: 0.95, trunk_link: 0.85,
@@ -103,7 +59,7 @@
       unclassified: 0.15, residential: 0.12,
       living_street: 0.05, service: 0.1, track: 0.08, road: 0.3
     };
-    const URBAN_ENV_BONUS = 0.9; // zusätzlicher Strafzuschlag in bebauten Zonen
+    const URBAN_ENV_BONUS = 0.9;
 
     const defaultSettings = {
       maxSpeedEnabled: false,
@@ -137,12 +93,12 @@
     const map = Navi.getMap();
 
     const routeState = {
-      startMode: "gps",       // 'gps' | 'custom'
-      startPoint: null,       // {lon,lat}
-      endPoint: null,         // {lon,lat}
-      pickingFor: null,       // 'start' | 'end' | null  (Kartenklick-Modus)
-      lastRoute: null,        // {coords, distanceM, timeS, steps}
-      graphCache: null,       // {bbox, nodes, edges}
+      startMode: "gps",
+      startPoint: null,
+      endPoint: null,
+      pickingFor: null,
+      lastRoute: null,
+      graphCache: null,
       calculating: false
     };
 
@@ -173,7 +129,6 @@
     }
 
     function pointInPolygon(lon, lat, ring) {
-      // Ray-Casting-Algorithmus, ring = [[lon,lat], ...]
       let inside = false;
       for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
         const xi = ring[i][0], yi = ring[i][1];
@@ -250,11 +205,11 @@ out skel qt;
 
       const cache = routeState.graphCache;
       if (cache && bboxContains(cache.bbox, bbox)) {
-        return cache; // vorhandenes, größeres Netz deckt die Anfrage bereits ab
+        return cache;
       }
 
       const data = await fetchOverpass(buildOverpassQuery(bbox));
-      const graph = parseOverpassToGraph(data);
+      const graph = await parseOverpassToGraph(data);
       graph.bbox = bbox;
       routeState.graphCache = graph;
       return graph;
@@ -265,10 +220,10 @@ out skel qt;
         outer.west <= inner.west && outer.east >= inner.east;
     }
 
-    function parseOverpassToGraph(data) {
-      const nodes = new Map();     // id -> {lat, lon}
-      const adjacency = new Map(); // id -> [{to, distM, tags, wayId}]
-      const landusePolys = [];     // [{ring: [[lon,lat],...]}]
+    async function parseOverpassToGraph(data) {
+      const nodes = new Map();
+      const adjacency = new Map();
+      const landusePolys = [];
 
       const wayList = [];
       (data.elements || []).forEach(el => {
@@ -305,10 +260,11 @@ out skel qt;
         }
       });
 
-      // Umgebung (Stadt/Land) je Kante einmalig bestimmen und cachen
-      adjacency.forEach(edges => {
-        edges.forEach(edge => {
-          if (edge.envResolved) return;
+      // Asynchrone Abarbeitung der Landnutzungs-Prüfung zur Vermeidung von UI-Freezes
+      let edgeCounter = 0;
+      for (const edges of adjacency.values()) {
+        for (const edge of edges) {
+          if (edge.envResolved) continue;
           const from = nodes.get(edge.fromId), to = nodes.get(edge.to);
           if (from && to) {
             const midLon = (from.lon + to.lon) / 2, midLat = (from.lat + to.lat) / 2;
@@ -317,8 +273,13 @@ out skel qt;
             edge.isUrban = false;
           }
           edge.envResolved = true;
-        });
-      });
+
+          edgeCounter++;
+          if (edgeCounter % 1500 === 0) {
+            await new Promise(r => setTimeout(r, 0));
+          }
+        }
+      }
 
       return { nodes, adjacency, landusePolys };
     }
@@ -352,10 +313,6 @@ out skel qt;
       });
     }
 
-    /* ======================================================================
-       GESCHWINDIGKEITS-PARSING
-       ====================================================================== */
-
     function parseSpeedTag(raw) {
       if (!raw) return null;
       const s = String(raw).trim().toLowerCase();
@@ -381,14 +338,6 @@ out skel qt;
       return 0;
     }
 
-    /* ======================================================================
-       KANTEN-KOSTEN NACH DEINER FORMEL
-       C = (Länge / min(v_Straße, v_Fahrzeug)) * (1 + Faktor_Ruhe * Gewicht_Umgebung)
-       gibt null zurück, wenn die Kante wegen der aktuellen Einstellungen
-       gesperrt ist (Autobahn gemeiden, Maut gemeiden, Mindestgeschwindigkeit
-       nicht erreichbar).
-       ====================================================================== */
-
     function edgeCost(edge, cfg) {
       const tags = edge.tags;
 
@@ -405,7 +354,7 @@ out skel qt;
 
       const minRequired = requiredMinSpeedKmh(tags);
       if (cfg.maxSpeedEnabled && minRequired > 0 && vVehicle < minRequired) {
-        return null; // legal nicht befahrbar mit dieser Höchstgeschwindigkeit
+        return null;
       }
 
       const vEff = Math.min(vRoad, vVehicle);
@@ -422,7 +371,7 @@ out skel qt;
     }
 
     /* ======================================================================
-       A*-SUCHE MIT BINÄRER MIN-HEAP
+       A*-SUCHE MIT BINÄRER MIN-HEAP (ASYNC/NON-BLOCKING)
        ====================================================================== */
 
     function MinHeap() {
@@ -470,7 +419,7 @@ out skel qt;
       });
       return best;
     }
-    // einfache Prüfung, ob ein Knoten Ziel irgendeiner Kante ist (für Sackgassen-Enden)
+
     let incomingCache = null;
     function hasIncoming(graph, id) {
       if (!incomingCache || incomingCache.graph !== graph) {
@@ -481,9 +430,9 @@ out skel qt;
       return incomingCache.set.has(id);
     }
 
-    const FASTEST_POSSIBLE_KMH = 130; // für zulässige (nie überschätzende) A*-Heuristik
+    const FASTEST_POSSIBLE_KMH = 130;
 
-    function aStarRoute(graph, startId, endId, cfg) {
+    async function aStarRoute(graph, startId, endId, cfg) {
       const endPos = graph.nodes.get(endId);
       const heap = new MinHeap();
       const gScore = new Map();
@@ -498,6 +447,12 @@ out skel qt;
 
       while (!heap.isEmpty()) {
         if (++iterations > ITER_LIMIT) throw new Error("Routenberechnung abgebrochen (zu komplex).");
+
+        // Alle 2500 Durchläufe kurz den Hauptthread freigeben, um Freezes zu verhindern
+        if (iterations % 2500 === 0) {
+          await new Promise(r => setTimeout(r, 0));
+        }
+
         const current = heap.pop();
         if (visited.has(current.id)) continue;
         visited.add(current.id);
@@ -538,7 +493,7 @@ out skel qt;
     }
 
     /* ======================================================================
-       ABBIEGEHINWEISE (einfache Bearing-basierte Erkennung)
+       ABBIEGEHINWEISE
        ====================================================================== */
 
     function buildTurnSteps(graph, routeResult) {
@@ -560,7 +515,7 @@ out skel qt;
         while (diff > 180) diff -= 360;
         while (diff < -180) diff += 360;
 
-        if (Math.abs(diff) < 28) continue; // fast geradeaus -> kein Hinweis
+        if (Math.abs(diff) < 28) continue;
 
         const dir = diff > 0 ? "rechts" : "links";
         const strength = Math.abs(diff) > 100 ? "scharf " : Math.abs(diff) > 55 ? "" : "leicht ";
@@ -654,7 +609,6 @@ out skel qt;
       if (map.getSource(MARKER_SOURCE_ID)) map.getSource(MARKER_SOURCE_ID).setData(emptyFC());
     }
 
-    // Theme-Wechsel: Routenfarbe an neue CSS-Variablen anpassen
     const themeObserver = new MutationObserver(() => {
       if (map.getLayer(ROUTE_LAYER_MAIN)) {
         map.setPaintProperty(ROUTE_LAYER_MAIN, "line-color", getCssVar("--bn-accent", "#20c9a8"));
@@ -682,7 +636,7 @@ out skel qt;
     });
 
     /* ======================================================================
-       KARTENKLICK ZUM SETZEN VON START/ZIEL
+       KARTENKLICK ZUM SETZEN VON START/ZIEL (KORRIGIERT)
        ====================================================================== */
 
     map.on("click", (e) => {
@@ -699,11 +653,22 @@ out skel qt;
       routeState.pickingFor = null;
       map.getCanvas().style.cursor = "";
       refreshPanel();
+
+      // Modal nach der Kartenauswahl automatisch wieder öffnen
+      if (typeof Navi.openModal === "function") {
+        Navi.openModal("Routing", panelEl);
+      }
     });
 
     function startPicking(which) {
       routeState.pickingFor = which;
       map.getCanvas().style.cursor = "crosshair";
+
+      // Modal schließen, damit Klicks auf die Karte ungehindert ankommen
+      if (typeof Navi.closeModal === "function") {
+        Navi.closeModal();
+      }
+
       Navi.showToast(
         which === "start" ? "Tippe auf die Karte, um den Start zu setzen" : "Tippe auf die Karte, um das Ziel zu setzen",
         "warn"
@@ -722,7 +687,7 @@ out skel qt;
     }
 
     /* ======================================================================
-       ROUTE BERECHNEN (ORCHESTRIERUNG)
+       ROUTE BERECHNEN (ORCHESTRIERUNG - ASYNC)
        ====================================================================== */
 
     async function computeRoute() {
@@ -756,7 +721,7 @@ out skel qt;
           quietPercent: settings.quietPercent
         };
 
-        const result = aStarRoute(graph, startId, endId, cfg);
+        const result = await aStarRoute(graph, startId, endId, cfg);
         if (!result) {
           throw new Error("Keine gültige Route gefunden (evtl. wegen Sperren/Höchstgeschwindigkeit zu restriktiv).");
         }
@@ -796,7 +761,7 @@ out skel qt;
     }
 
     /* ======================================================================
-       LIVE-NAVIGATION: NÄCHSTER ABBIEGEHINWEIS ANHAND GPS-POSITION
+       LIVE-NAVIGATION
        ====================================================================== */
 
     Navi.onPositionUpdate((pos) => {
@@ -804,7 +769,6 @@ out skel qt;
       const steps = routeState.lastRoute.steps;
       if (!steps || !steps.length) return;
 
-      // nächsten noch nicht erreichten Schritt suchen (einfache Nächster-Punkt-Logik)
       let bestIdx = 0, bestDist = Infinity;
       steps.forEach((s, i) => {
         const d = haversineM(pos.lat, pos.lon, s.lat, s.lon);
@@ -814,7 +778,7 @@ out skel qt;
     });
 
     /* ======================================================================
-       UI: HUD-WIDGET (DISTANZ/ETA)
+       UI: HUD-WIDGET
        ====================================================================== */
 
     function fmtDistance(m) {
@@ -844,7 +808,7 @@ out skel qt;
     }
 
     /* ======================================================================
-       UI: ABBIEGE-ANZEIGE (klein, oben, toggle-bar & bleibt so eingestellt)
+       UI: ABBIEGE-ANZEIGE
        ====================================================================== */
 
     let turnBoxNode = null;
@@ -884,7 +848,7 @@ out skel qt;
     }
 
     /* ======================================================================
-       UI: EINSTELLUNGS-PANEL (im Modul-Modal, per Gear-Icon)
+       UI: EINSTELLUNGS-PANEL
        ====================================================================== */
 
     const panelEl = document.createElement("div");
@@ -1032,6 +996,7 @@ out skel qt;
       }
       p.status.textContent = statusText;
     }
+
     function setPanelBusy(busy) {
       p.btnCalc.textContent = busy ? "Berechne…" : "Route berechnen";
       p.btnCalc.disabled = busy;
